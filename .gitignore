@@ -2,3 +2,5 @@
 *.out
 *.elf
 *.exe
+build/
+googletest/
