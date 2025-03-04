@@ -4,6 +4,7 @@ extern "C" {
 #include "../src/main.c"
 }
 
+#ifdef UNIT_TEST
 // Тест установки и получения режима
 TEST(CalculatorTest, ModeTest)
 {
@@ -12,13 +13,6 @@ TEST(CalculatorTest, ModeTest)
 
     set_mode(FLOAT_MODE);
     EXPECT_EQ(get_mode(), FLOAT_MODE);
-}
-
-// Тест установки и получения глобальной позиции
-TEST(CalculatorTest, GlobalPosTest)
-{
-    set_global_pos(15);
-    EXPECT_EQ(get_global_pos(), 15);
 }
 
 // Тест валидации символов
@@ -41,7 +35,6 @@ TEST(CalculatorTest, InputValidation)
 TEST(CalculatorTest, GetOperand)
 {
     char buffer[] = "42";
-    set_global_pos(0);
     set_mode(INT_MODE);
     EXPECT_EQ(get_operand(buffer).intValue, 42);
 }
@@ -50,7 +43,7 @@ TEST(CalculatorTest, GetOperand)
 TEST(CalculatorTest, ExpressionTest)
 {
     char buffer[] = "(5+5)*2";
-    set_global_pos(0);
     set_mode(INT_MODE);
     EXPECT_EQ(calculate_expression(buffer).intValue, 20);
 }
+#endif

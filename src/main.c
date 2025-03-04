@@ -1,3 +1,8 @@
+#ifdef UNIT_TEST
+#define UNUSED(x) (void)(x)
+#else
+#define UNUSED(x) ((void)(x))
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,31 +20,36 @@ typedef union {
 } NumberType;
 
 // Объявления функций перед их использованием
-Mode set_mode(Mode new_mode);
-Mode get_mode();
+static Mode set_mode(Mode new_mode);
+static Mode get_mode();
 void validate_and_strip_input(char* buffer);
 NumberType calculate_expression(char* buffer);
 
 static int global_pos = 0;
 static Mode currentMode = INT_MODE;
 
+// Реализация функций set_mode и get_mode
+static Mode set_mode(Mode new_mode) {
+    currentMode = new_mode;
+    return currentMode;
+}
+
+static Mode get_mode() { 
+    return currentMode; 
+}
+
 int set_global_pos(int new_pos) {
     global_pos = new_pos;
     return global_pos;
 }
 
-int get_global_pos() { return global_pos; }
-
-Mode set_mode(Mode new_mode) {
-    currentMode = new_mode;
-    return currentMode;
+int get_global_pos() { 
+    return global_pos; 
 }
 
-Mode get_mode() { return currentMode; }
-
 int is_valid_char(char c) {
- return isdigit(c) ||  strchr("()*+-/", c) ||  isspace(c);
- }
+    return isdigit(c) ||  strchr("()*+-/", c) ||  isspace(c);
+}
 
 void validate_and_strip_input(char* buffer) {
     char* old = buffer;
@@ -155,10 +165,10 @@ NumberType calculate_expression(char* buffer) {
                 res.floatValue -= x.floatValue;
             }
         }
-    }return res;
+    }
+    return res;
 }
 
-#ifndef UNIT_TEST
 int main(int argc, char* argv[]) {
     char buffer[MAX_BUFFER_SIZE];
     int len = 0;
@@ -184,4 +194,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-#endif
