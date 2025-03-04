@@ -2,6 +2,7 @@
 *.out
 *.elf
 *.exe
+.gitmodules
 build/
 googletest/
 __pycache__
