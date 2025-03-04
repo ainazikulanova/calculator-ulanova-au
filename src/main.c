@@ -14,6 +14,10 @@ typedef union {
     double floatValue;
 } NumberType;
 
+// Объявления функций перед их использованием
+Mode set_mode(Mode new_mode);
+Mode get_mode();
+void validate_and_strip_input(char* buffer);
 NumberType calculate_expression(char* buffer);
 
 static int global_pos = 0;
@@ -33,11 +37,13 @@ Mode set_mode(Mode new_mode) {
 
 Mode get_mode() { return currentMode; }
 
-int is_valid_char(char c) { return isdigit(c)  strchr("()*+-/", c)  isspace(c); }
+int is_valid_char(char c) {
+ return isdigit(c) ||  strchr("()*+-/", c) ||  isspace(c);
+ }
 
 void validate_and_strip_input(char* buffer) {
     char* old = buffer;
-    char* new = buffer;
+    char* new_buffer = buffer;
     int parenthesis = 0;
     int operation = 0;
     int prev_char_was_digit = 0;
@@ -69,10 +75,10 @@ void validate_and_strip_input(char* buffer) {
             operation = 0;
         }
 
-        *new = *old;
-        ++new;
+        *new_buffer = *old;
+        ++new_buffer;
     }
-    *new = 0;
+    *new_buffer = 0;
 
     if (parenthesis != 0) exit(4);
 }
@@ -116,7 +122,6 @@ NumberType get_product(char* buffer) {
         } else {
             if (currentMode == INT_MODE) {
                 if (x.intValue == 0) exit(1);
-                // Округление вниз при делении (в сторону -inf)
                 res.intValue = res.intValue / x.intValue;
                 if ((res.intValue * x.intValue != res.intValue) && ((res.intValue < 0) != (x.intValue < 0))) {
                     res.intValue -= 1;
@@ -150,10 +155,10 @@ NumberType calculate_expression(char* buffer) {
                 res.floatValue -= x.floatValue;
             }
         }
-    }
-    return res;
+    }return res;
 }
 
+#ifndef UNIT_TEST
 int main(int argc, char* argv[]) {
     char buffer[MAX_BUFFER_SIZE];
     int len = 0;
@@ -179,3 +184,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+#endif
