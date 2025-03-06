@@ -1,11 +1,10 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-#include "../src/main.c"
+    #include "calculator.h"
 }
 
-#ifdef UNIT_TEST
-// Тест установки и получения режима
+// Тесты
 TEST(CalculatorTest, ModeTest)
 {
     set_mode(INT_MODE);
@@ -15,7 +14,6 @@ TEST(CalculatorTest, ModeTest)
     EXPECT_EQ(get_mode(), FLOAT_MODE);
 }
 
-// Тест валидации символов
 TEST(CalculatorTest, ValidCharTest)
 {
     EXPECT_TRUE(is_valid_char('3'));
@@ -23,7 +21,6 @@ TEST(CalculatorTest, ValidCharTest)
     EXPECT_FALSE(is_valid_char('x'));
 }
 
-// Тест обработки корректного ввода
 TEST(CalculatorTest, InputValidation)
 {
     char buffer[] = " 3 + 4 ";
@@ -31,7 +28,6 @@ TEST(CalculatorTest, InputValidation)
     EXPECT_STREQ(buffer, "3+4");
 }
 
-// Тест получения числа
 TEST(CalculatorTest, GetOperand)
 {
     char buffer[] = "42";
@@ -39,11 +35,9 @@ TEST(CalculatorTest, GetOperand)
     EXPECT_EQ(get_operand(buffer).intValue, 42);
 }
 
-// Тест вычисления выражения
 TEST(CalculatorTest, ExpressionTest)
 {
-    char buffer[] = "(5+5)*2";
+    char buffer[] = "(5+4)*5";
     set_mode(INT_MODE);
-    EXPECT_EQ(calculate_expression(buffer).intValue, 20);
+    EXPECT_EQ(calculate_expression(buffer).intValue, 45);
 }
-#endif

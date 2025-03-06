@@ -1,0 +1,10 @@
+*.o
+*.out
+*.elf
+*.exe
+.vscode/
+build/
+googletest/
+venv/
+.pytest_cache/
+tests/i

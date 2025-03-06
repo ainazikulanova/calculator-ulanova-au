@@ -1,39 +1,56 @@
 CC = gcc
 CXX = g++
+
 CFLAGS = -Wall -Wextra -Wpedantic -Werror -std=c11
 CXXFLAGS = -Wall -Wextra -Wpedantic -Werror -std=c++17
-LDFLAGS = -lm
+LDFLAGS = -lstdc++ -lm
+TEST_LDFLAGS = -lpthread
 
 SRC_DIR = src
 BUILD_DIR = build
 UNIT_TESTS_DIR = tests/unit
-INTEGRATION_TEST_DIR = tests/integration
 
-APP_SRC = $(SRC_DIR)/main.c
-APP_OBJ = $(BUILD_DIR)/main.o
+# Application
+APP_SRC = $(SRC_DIR)/main.c $(SRC_DIR)/calculator.c
+APP_OBJ = $(BUILD_DIR)/main.o $(BUILD_DIR)/calculator.o
 APP_EXE = $(BUILD_DIR)/app.exe
 
-TEST_SRC = $(UNIT_TESTS_DIR)/calculator_tests.cpp
-TEST_OBJ = $(BUILD_DIR)/tests.o $(BUILD_DIR)/main_test.o
+# Unit tests
+TEST_SRC = $(UNIT_TESTS_DIR)/calculator_tests.cpp  $(SRC_DIR)/calculator.c
+TEST_OBJ = $(BUILD_DIR)/calculator_tests.o  $(BUILD_DIR)/calculator.o
 TEST_EXE = $(BUILD_DIR)/unit-tests.exe
 
-# GoogleTest
+# GoogleTest files
 GTEST_DIR = googletest
 GTEST_BUILD = $(GTEST_DIR)/build
-TEST_LDFLAGS = -L$(GTEST_BUILD) -lgtest -lgtest_main -lpthread
+GTEST_LIB = $(GTEST_BUILD)/lib
+GTEST_INCLUDE = -I$(GTEST_DIR)/googletest/include
 
+# Formatting configuration
 FORMAT_DIRS = $(SRC_DIR) $(UNIT_TESTS_DIR)
+FORMAT_EXTS = *.cpp *.c *.h
 CLANG_FORMAT = clang-format
 
+# Python integration tests
 VENV = venv
 PYTHON = $(VENV)/bin/python
 PIP = $(VENV)/bin/pip
-INT_TESTS = $(INTEGRATION_TEST_DIR)/integration-tests.py
+INT_TEST_DIR = tests/integration
+INT_TESTS = $(INT_TEST_DIR)/tests.py
 
-.PHONY: all clean run-int run-float run-unit-test format venv run-integration-tests gtest
+.PHONY: all clean run-app run-unit-test format venv run-integration-tests
 
-all: $(APP_EXE) $(TEST_EXE)
+all:	$(APP_EXE) $(TEST_EXE)
 
+# GoogleTest download and build
+$(GTEST_DIR)/CMakeLists.txt:
+	git clone https://github.com/google/googletest.git $(GTEST_DIR)
+
+$(GTEST_LIB): $(GTEST_DIR)/CMakeLists.txt
+	@mkdir -p $(GTEST_BUILD)
+	cd $(GTEST_BUILD) && cmake .. && make
+
+# Build application
 $(APP_EXE): $(APP_OBJ)
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
@@ -42,28 +59,20 @@ $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# ---  GoogleTest ---
-$(GTEST_DIR)/CMakeLists.txt:
-	git clone https://github.com/google/googletest.git $(GTEST_DIR)
-
-$(GTEST_BUILD): $(GTEST_DIR)/CMakeLists.txt
-	mkdir -p $(GTEST_BUILD)
-	cd $(GTEST_BUILD) && cmake .. && $(MAKE)
-
-$(TEST_EXE): $(TEST_OBJ) | $(GTEST_BUILD)
+$(BUILD_DIR)/calculator.o: $(SRC_DIR)/calculator.c
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(TEST_LDFLAGS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/tests.o: $(UNIT_TESTS_DIR)/calculator_tests.cpp
+# Build unit tests
+$(TEST_EXE): $(TEST_OBJ) $(GTEST_LIB)
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -o $@ $(TEST_OBJ) $(GTEST_LIB)/libgtest.a $(GTEST_LIB)/libgtest_main.a $(TEST_LDFLAGS) $(LDFLAGS)
 
-$(BUILD_DIR)/main_test.o: $(SRC_DIR)/main.c
+$(BUILD_DIR)/calculator_tests.o: $(UNIT_TESTS_DIR)/calculator_tests.cpp
 	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -DUNIT_TEST -c -o $@ $<
-
+	$(CXX) $(CXXFLAGS) $(GTEST_INCLUDE) -Isrc -c -o $@ $<
 clean:
-	rm -rf $(BUILD_DIR) $(VENV)
+	rm -rf $(BUILD_DIR)
 
 run-int: $(APP_EXE)
 	./$(APP_EXE)
@@ -75,13 +84,17 @@ run-unit-test: $(TEST_EXE)
 	./$(TEST_EXE)
 
 format:
-	@find $(FORMAT_DIRS) -type f \( -name "*.cpp" -o -name "*.c" -o -name "*.h" \) -exec $(CLANG_FORMAT) -i -style=file {} +
+	@find $(FORMAT_DIRS) -type f \( \
+		-name "*.cpp" -o \
+		-name "*.c" -o \
+		-name "*.h" \
+	\) -exec $(CLANG_FORMAT) -i -style=file {} +
 
-# ---   Python   pytest ---
-venv:
-	python3 -m venv $(VENV)
-	$(PIP) install --upgrade pip
-	$(PIP) install pytest
-
-run-integration-tests: venv $(APP_EXE)
-	@APP_PATH=$(abspath $(APP_EXE)) $(PYTHON) -m pytest -v $(INTEGRATION_TEST_DIR)
+$(VENV):
+	@python3 -m venv $(VENV)
+	@$(PIP) install --upgrade pip
+	@$(PIP) list | grep -q pytest || $(PIP) install pytest
+run-integration-tests:
+	$(VENV) $(APP_EXE)
+	@. venv/bin/activate
+	@pytest $(INT_TESTS)
