@@ -39,5 +39,6 @@ TEST(CalculatorTest, ExpressionTest)
 {
     char buffer[] = "(5+4)*5";
     set_mode(INT_MODE);
+    set_global_pos(0);
     EXPECT_EQ(calculate_expression(buffer).intValue, 45);
 }

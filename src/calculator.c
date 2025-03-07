@@ -35,6 +35,10 @@ void validate_and_strip_input(char* buffer) {
     int prev_char_was_digit = 0;
     int space_count = 0;
 
+    if (*old == '-') {
+        exit(5);
+    }
+
     for (; *old != 0; ++old) {
         if (!is_valid_char(*old)) exit(3);
 
@@ -67,6 +71,7 @@ void validate_and_strip_input(char* buffer) {
     *new_buffer = 0;
 
     if (parenthesis != 0) exit(4);
+
 }
 
 NumberType get_operand(char* buffer) {
@@ -124,6 +129,7 @@ NumberType get_product(char* buffer) {
 
 NumberType calculate_expression(char* buffer) {
     NumberType res = get_product(buffer);  // Получаем первый операнд
+
     while (buffer[global_pos] == '+' || buffer[global_pos] == '-') {
         char operation = buffer[global_pos];
         global_pos++;  // Пропускаем оператор
@@ -143,5 +149,13 @@ NumberType calculate_expression(char* buffer) {
             }
         }
     }
+
+    // Добавляем проверку на переполнение
+    if (currentMode == INT_MODE) {
+        if (res.intValue > 2000000000 || res.intValue < -2000000000) {
+            exit(1);  // Завершаем программу с ошибкой
+        }
+    }
+
     return res;
 }

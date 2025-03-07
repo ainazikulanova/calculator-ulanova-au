@@ -36,7 +36,7 @@ VENV = venv
 PYTHON = $(VENV)/bin/python
 PIP = $(VENV)/bin/pip
 INT_TEST_DIR = tests/integration
-INT_TESTS = $(INT_TEST_DIR)/tests.py
+INT_TESTS = $(INT_TEST_DIR)/test_integration.py
 
 .PHONY: all clean run-app run-unit-test format venv run-integration-tests
 
@@ -94,7 +94,6 @@ $(VENV):
 	@python3 -m venv $(VENV)
 	@$(PIP) install --upgrade pip
 	@$(PIP) list | grep -q pytest || $(PIP) install pytest
-run-integration-tests:
-	$(VENV) $(APP_EXE)
+run-integration-tests: $(VENV) $(APP_EXE)
 	@. venv/bin/activate
 	@pytest $(INT_TESTS)
